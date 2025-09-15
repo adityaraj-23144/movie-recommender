@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #bb86fc;
+            margin-bottom: 1.5rem;
+        }
+        label {
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #3700b3;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        #results {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        #results h3 {
+            color: #03dac6;
+        }
+        #results ol {
+            list-style-type: decimal;
+            padding-left: 20px;
+        }
+        #results li {
+            background-color: #2c2c2c;
+            margin-bottom: 0.5rem;
+            padding: 0.8rem;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Movie Recommender</h1>
+        <form id="recommendation-form">
+            <label for="movie">Type a movie you like:</label>
+            <input list="movie-titles" id="movie" name="movie" required autocomplete="off" placeholder="e.g., Toy Story (1995)">
+            <datalist id="movie-titles">
+                {% for title in movie_titles %}
+                    <option value="{{ title }}">
+                {% endfor %}
+            </datalist>
+
+            <label for="top_n">Number of recommendations:</label>
+            <select id="top_n" name="top_n">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+            </select>
+
+            <button type="submit">Get Recommendations</button>
+        </form>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        
+        document.getElementById('recommendation-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const movie = document.getElementById('movie').value;
+            const top_n = document.getElementById('top_n').value;
+            const resultsDiv = document.getElementById('results');
+
+            resultsDiv.innerHTML = '<h3>Finding movies...</h3>'; 
+
+            
+            const response = await fetch(`/recommend?movie=${encodeURIComponent(movie)}&top_n=${top_n}`);
+            const data = await response.json();
+
+            let html = `<h3>Recommendations for '${movie}':</h3>`;
+            if (data.recommendations && data.recommendations.length > 0) {
+                if (data.recommendations[0].includes("Movie not found")) {
+                    html += `<p>${data.recommendations[0]}</p>`;
+                } else {
+                    html += '<ol>';
+                    data.recommendations.forEach(rec => {
+                        html += `<li>${rec}</li>`;
+                    });
+                    html += '</ol>';
+                }
+            } else {
+                html += '<p>Could not find any recommendations.</p>';
+            }
+            resultsDiv.innerHTML = html;
+        });
+    </script>
+</body>
+</html>
